@@ -1,5 +1,5 @@
 /* eslint-disable class-methods-use-this, no-underscore-dangle */
-import jwtLib from 'jsonwebtoken';
+const jwtLib = require('jsonwebtoken');
 // TODO: combine request calls to ease server load
 
 class IrisAPI {
@@ -114,4 +114,4 @@ class IrisAPI {
   }
 }
 
-export default IrisAPI;
+module.exports = IrisAPI;
