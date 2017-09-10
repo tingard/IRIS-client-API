@@ -1,0 +1,76 @@
+{
+  "name": "grapheel-iris-client-api",
+  "version": "1.0.0",
+  "description": "Script to talk to the Grapheel IRIS API",
+  "main": "index.js",
+  "scripts": {
+    "test": "node ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tingard/IRIS-client-API.git"
+  },
+  "keywords": [
+    "grapheel",
+    "iris"
+  ],
+  "author": "Tim Lingard <tim@grapheel.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tingard/IRIS-client-API/issues"
+  },
+  "homepage": "https://github.com/tingard/IRIS-client-API#readme",
+  "devDependencies": {
+    "babel-jest": "^19.0.0",
+    "babel-loader": "^6.2.8",
+    "babel-preset-airbnb": "^2.2.3",
+    "babel-preset-latest": "^6.16.0",
+    "babel-preset-react": "^6.16.0",
+    "eslint": "^3.10.2",
+    "eslint-config-airbnb": "^13.0.0",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-jsx-a11y": "2.2.3",
+    "eslint-plugin-react": "^6.7.1"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^8.0.0"
+  },
+  "eslintConfig": {
+    "extends": "airbnb",
+    "plugins": [
+      "import"
+    ],
+    "env": {
+      "browser": true,
+      "es6": true,
+      "node": true,
+      "jest": true
+    },
+    "rules": {
+      "no-plusplus": 0,
+      "no-console": 0,
+      "comma-dangle": [
+        "error",
+        {
+          "arrays": "always-multiline",
+          "objects": "always-multiline",
+          "imports": "always-multiline",
+          "exports": "always-multiline",
+          "functions": "only-multiline"
+        }
+      ],
+      "react/forbid-prop-types": [
+        0
+      ],
+      "new-cap": [
+        2,
+        {
+          "capIsNewExceptions": [
+            "Map",
+            "List"
+          ]
+        }
+      ]
+    }
+  }
+}
