@@ -24,7 +24,7 @@ class IrisAPI {
     const token = localStorage.getItem('iris-token');
     if (token !== null) {
       const jwt = jwtLib.decode(token);
-      if (!(jwt.exp < Date.now() / 1000)) {
+      if (!(jwt.exp < (Date.now() / 1000))) {
         this.state._token = token;
       }
     }

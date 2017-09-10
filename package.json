@@ -1,10 +1,10 @@
 {
   "name": "grapheel-iris-client-api",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Script to talk to the Grapheel IRIS API",
   "main": "index.js",
   "scripts": {
-    "test": "gulp"
+    "test": "gulp && jest"
   },
   "repository": {
     "type": "git",
@@ -33,7 +33,9 @@
     "eslint-plugin-react": "^6.7.1",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
-    "gulp-eslint": "^3.0.1"
+    "gulp-eslint": "^3.0.1",
+    "gulp-jest": "^2.0.0",
+    "jest-cli": "^21.0.2"
   },
   "dependencies": {
     "jsonwebtoken": "^8.0.0"
@@ -44,6 +46,10 @@
       "react",
       "airbnb"
     ]
+  },
+  "jest": {
+    "setupTestFrameworkScriptFile": "./__jestSetup__.js",
+    "verbose": true
   },
   "eslintConfig": {
     "extends": "airbnb",

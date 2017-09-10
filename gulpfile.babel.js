@@ -5,8 +5,9 @@ import eslint from 'gulp-eslint';
 
 // define where our paths are
 const paths = {
-  allSrcJs: 'src/**/*.js?(x)', // all js(x) files
-  srcJs: 'src/**/*.js?(x)', // server js(x) files
+  allSrcJs: '*.js?(x)', // all js(x) files
+  srcJs: '**/*.js?(x)', // source js(x) files
+  testJs: '**/*.spec.js?(x)', // server js(x) files
   serverEntryPoint: 'src/index.js', // client connection file
   gulpFile: 'gulpfile.babel.js', // gulp configuration file
   libDir: 'lib',
