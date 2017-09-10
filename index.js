@@ -11,8 +11,8 @@ class IrisAPI {
     this._sendWebSocketRequest = this._sendWebSocketRequest.bind(this);
     this._sendHttpRequest = this._sendHttpRequest.bind(this);
     this.state = {
-      apiUrl: 'https://grapheel-iris.herokuapp.com/api', // TODO: http://app.grapheel.com
-      websocketUrl: 'https://grapheel-iris.herokuapp.com/websocket',
+      apiUrl: 'https://grapheel-iris-api.herokuapp.com/',
+      websocketUrl: 'https://grapheel-iris-api.herokuapp.com/websocket',
       _token: null,
       user: null,
       websocket: null,
@@ -30,6 +30,7 @@ class IrisAPI {
     }
   }
   _sendRequest(url, type, bodyHeaders) {
+    // prefer to use websocket over https request
     if (this.state.websocket !== null && this.state.websocket.readyState === 1) {
       return this._sendWebSocketRequest(url, type, bodyHeaders);
     }
