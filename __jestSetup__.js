@@ -1,4 +1,3 @@
-console.log('running');
 class LocalStorageMock {
   constructor() { this.store = {}; }
   clear() { this.store = {}; }

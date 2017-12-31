@@ -35,9 +35,11 @@
     "gulp-babel": "^6.1.2",
     "gulp-eslint": "^3.0.1",
     "gulp-jest": "^2.0.0",
+    "husky": "^0.14.3",
     "jest-cli": "^21.0.2"
   },
   "dependencies": {
+    "jest": "^22.0.4",
     "jsonwebtoken": "^8.0.0"
   },
   "babel": {
