@@ -11,7 +11,12 @@ export default (url, type, bodyHeaders, state) => (
     xhr.onload = () => {
       if (xhr.status === 200) {
         const responseObject = JSON.parse(xhr.response);
-        resolve(responseObject);
+        if (responseObject.success === false) {
+          console.warn(responseObject);
+          reject(Error(`API call to ${url} failed`));
+        } else {
+          resolve(responseObject);
+        }
       } else {
         reject(Error(`API call to ${url} failed`));
       }
