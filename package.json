@@ -2,9 +2,10 @@
   "name": "grapheel-iris-client-api",
   "version": "1.1.2",
   "description": "Script to talk to the Grapheel IRIS API",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "scripts": {
-    "test": "gulp && jest"
+    "test": "gulp && jest",
+    "build": "rm -r dist/*; babel src --presets babel-preset-es2015 --out-dir dist"
   },
   "repository": {
     "type": "git",
@@ -25,7 +26,6 @@
     "babel-loader": "^6.2.8",
     "babel-preset-airbnb": "^2.2.3",
     "babel-preset-latest": "^6.16.0",
-    "babel-preset-react": "^6.16.0",
     "eslint": "^3.10.2",
     "eslint-config-airbnb": "^13.0.0",
     "eslint-plugin-import": "^2.2.0",

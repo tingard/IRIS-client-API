@@ -2,7 +2,7 @@
 import jwtLib from 'jsonwebtoken';
 import httpRequest from './httpRequest';
 
-// TODO: combine request calls to ease server load
+// TODO: combine request calls to ease server load?
 // TODO: clever caching for instantaneous load
 
 class IrisAPI {
@@ -25,14 +25,6 @@ class IrisAPI {
         data: {},
       },
     };
-  }
-  loadTokenFromStorage() {
-    console.log('API Setting auth token from storage');
-    this.state.token = localStorage.getItem('iris-token');
-    Object.assign(this.state.user, {
-      type: localStorage.getItem('iris-utype'),
-    });
-    this.state.isLoggedIn = true;
   }
   init() {
     return new Promise((resolve, reject) => {
@@ -59,12 +51,21 @@ class IrisAPI {
       resolve(this.state);
     });
   }
+  loadTokenFromStorage() {
+    console.log('API Setting auth token from storage');
+    this.state.token = localStorage.getItem('iris-token');
+    Object.assign(this.state.user, {
+      type: localStorage.getItem('iris-utype'),
+    });
+    this.state.isLoggedIn = true;
+  }
   handle(type, payload) {
     // TODO: sanitize payload here AND server
-    console.log('handling', type, payload);
     switch (type.name) {
       case 'GET_USER_DETAILS':
         return this.getUserDetails();
+      case 'SET_USER_DETAILS':
+        return this.sendRequest(`/${this.state.user.type}s`, 'PUT', payload);
       case 'GET_IMAGES':
         return this.sendRequest('/images', 'GET');
       case 'UPLOAD_IMAGE':
@@ -74,6 +75,14 @@ class IrisAPI {
       case 'GET_MESSAGES':
         return this.sendRequest('/messages', 'GET');
       case 'SEND_MESSAGE':
+        // return new Promise((resolve) => {
+        //   resolve({});
+        // });
+        if (payload.imageId) {
+          return this.sendRequest('/messages', 'POST', payload);
+        } else if (payload.messageId) {
+          return this.sendRequest(`/messages/${payload.messageId}`, 'POST', payload);
+        }
         return this.sendRequest('/messages', 'POST', payload);
       default:
         return new Promise((resolve) => {
@@ -82,6 +91,7 @@ class IrisAPI {
     }
   }
   uploadImageRequest(formData) {
+    // TODO: mock for testing
     return new Promise((resolve, reject) => {
       const request = new XMLHttpRequest();
       const token = localStorage.getItem('iris-token');
@@ -182,4 +192,4 @@ class IrisAPI {
   }
 }
 
-module.exports = IrisAPI;
+export default IrisAPI;
