@@ -5,6 +5,8 @@ import httpRequest from './httpRequest';
 // TODO: combine request calls to ease server load?
 // TODO: clever caching for instantaneous load
 
+const validationError = () => ({ name: 'Validation Error', message: 'Not successful API call' });
+
 class IrisAPI {
   constructor() {
     // initialize storage
@@ -59,6 +61,42 @@ class IrisAPI {
     });
     this.state.isLoggedIn = true;
   }
+  login(utype, email, pwd) {
+    // POST to /login with email, pwd, utypt in body headers x-www-form-urlencoded
+    return this.sendRequest(
+      `/login/${utype}`,
+      'POST',
+      { email, pwd },
+    ).then(
+      (response) => {
+        if (response.success) {
+          localStorage.setItem('iris-token', response.token);
+          localStorage.setItem('iris-utype', utype);
+          this.state.token = response.token;
+          this.state.user = { type: utype };
+          this.state.isLoggedIn = true;
+        } else {
+          // inform of failed login
+          console.log('failed login');
+        }
+        return response;
+      },
+      () => ({ success: false }),
+    );
+  }
+  registerUser(payload) {
+    if (['volunteer', 'student'].includes(payload.utype)) {
+      return this.sendRequest(`/${payload.utype}s`, 'POST', payload).then(
+        res => this.login(payload.utype, payload.email, payload.pwd).then(() => {
+          localStorage.setItem('iris-helpOverlay', true);
+          return res;
+        })
+      );
+    }
+    return new Promise((resolve) => {
+      resolve({ success: false });
+    });
+  }
   handle(type, payload) {
     // TODO: sanitize payload here AND server
     switch (type.name) {
@@ -86,7 +124,7 @@ class IrisAPI {
         return this.sendRequest('/messages', 'POST', payload);
       default:
         return new Promise((resolve) => {
-          resolve({});
+          resolve({ success: false });
         });
     }
   }
@@ -113,7 +151,12 @@ class IrisAPI {
     if (this.state.websocket !== null && this.state.websocket.readyState === 1) {
       return this._sendWebSocketRequest(url, type, bodyHeaders);
     }
-    return httpRequest(url, type, bodyHeaders, this.state);
+    return httpRequest(url, type, bodyHeaders, this.state).then(
+      (res) => {
+        if (!res.success) throw validationError();
+        return res;
+      },
+    );
   }
   _sendWebSocketRequest(url, type, bodyHeaders) {
     // TODO: same method as _sendHttpRequest, but send over websocket
@@ -122,31 +165,6 @@ class IrisAPI {
       type,
       bodyHeaders,
     }));
-  }
-  login(utype, email, pwd) {
-    // POST to /login with email, pwd, utypt in body headers x-www-form-urlencoded
-    return this.sendRequest(
-      `/login/${utype}`,
-      'POST',
-      { email, pwd },
-    ).then(
-      (response) => {
-        if (response.success) {
-          localStorage.setItem('iris-token', response.token);
-          localStorage.setItem('iris-utype', utype);
-          this.state.token = response.token;
-          this.state.user = { type: utype };
-          this.state.isLoggedIn = true;
-        } else {
-          // inform of failed login
-          console.log('failed login');
-        }
-        return response;
-      },
-      (error) => {
-        console.error(error);
-      },
-    );
   }
   getUserDetails() {
     // GET to /${utype} with "JWT ${token}" in Authorization header
@@ -159,7 +177,7 @@ class IrisAPI {
         Object.assign(this.state.user, response);
         return this.state.user;
       },
-      (error) => { console.warn(error); }
+      () => null
     );
   }
   getMessages() {
