@@ -27,6 +27,7 @@ class IrisAPI {
         data: {},
       },
     };
+    console.log(`Using API at ${this.state.apiUrl}`);
   }
   init() {
     return new Promise((resolve, reject) => {
