@@ -16,7 +16,7 @@ class IrisAPI {
     this.sendRequest = this.sendRequest.bind(this);
     this._sendWebSocketRequest = this._sendWebSocketRequest.bind(this);
     this.state = {
-      apiUrl: 'http://127.0.0.1:3000', // 'https://grapheel-iris-api.herokuapp.com',
+      apiUrl: 'https://grapheel-iris-api.herokuapp.com',
       websocketUrl: '/websocket',
       token: null,
       isLoggedIn: false,
