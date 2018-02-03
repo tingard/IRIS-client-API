@@ -35,8 +35,8 @@ class IrisAPI {
     this.unSubscribeUserToPush = this.unSubscribeUserToPush.bind(this);
     this.updatePushSubscriptionOnServer = this.updatePushSubscriptionOnServer.bind(this);
     this.state = {
-      // apiUrl: 'https://grapheel-iris-api.herokuapp.com',
-      apiUrl: 'http://127.0.0.1:3000',
+      apiUrl: 'https://grapheel-iris-api.herokuapp.com',
+      // apiUrl: 'http://127.0.0.1:3000',
       token: null,
       isLoggedIn: false,
       user: {},
