@@ -1,11 +1,28 @@
 /* eslint-disable class-methods-use-this, no-underscore-dangle */
 import jwtLib from 'jsonwebtoken';
 import httpRequest from './httpRequest';
+// import registerServiceWorker from './register-service-worker';
 
 // TODO: combine request calls to ease server load?
 // TODO: clever caching for instantaneous load
 
 const validationError = () => ({ name: 'Validation Error', message: 'Not successful API call' });
+
+function urlB64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  /* eslint-disable no-plusplus */
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  /* eslint-enable no-plusplus */
+  return outputArray;
+}
 
 class IrisAPI {
   constructor() {
@@ -14,20 +31,23 @@ class IrisAPI {
     // TODO: get existing token from storage and check if it's expired
     this.init = this.init.bind(this);
     this.sendRequest = this.sendRequest.bind(this);
-    this._sendWebSocketRequest = this._sendWebSocketRequest.bind(this);
+    this.subscribeUserToPush = this.subscribeUserToPush.bind(this);
+    this.unSubscribeUserToPush = this.unSubscribeUserToPush.bind(this);
+    this.updatePushSubscriptionOnServer = this.updatePushSubscriptionOnServer.bind(this);
     this.state = {
-      apiUrl: 'https://grapheel-iris-api.herokuapp.com',
-      websocketUrl: '/websocket',
+      // apiUrl: 'https://grapheel-iris-api.herokuapp.com',
+      apiUrl: 'http://127.0.0.1:3000',
       token: null,
       isLoggedIn: false,
       user: {},
-      websocket: null,
       apiResponse: {
         key: null,
         data: {},
       },
+      swRegistration: null,
+      shouldPush: false,
+      isPushing: false,
     };
-    console.log(`Using API at ${this.state.apiUrl}`);
   }
   init() {
     return new Promise((resolve, reject) => {
@@ -100,6 +120,7 @@ class IrisAPI {
   }
   handle(type, payload) {
     // TODO: sanitize payload here AND server
+    let success = false;
     switch (type.name) {
       case 'GET_USER_DETAILS':
         return this.getUserDetails();
@@ -114,18 +135,31 @@ class IrisAPI {
       case 'GET_MESSAGES':
         return this.sendRequest('/messages', 'GET');
       case 'SEND_MESSAGE':
-        // return new Promise((resolve) => {
-        //   resolve({});
-        // });
         if (payload.imageId) {
           return this.sendRequest('/messages', 'POST', payload);
         } else if (payload.messageId) {
           return this.sendRequest(`/messages/${payload.messageId}`, 'POST', payload);
         }
         return this.sendRequest('/messages', 'POST', payload);
-      default:
+      case 'REGISTER_SERVICE_WORKER':
+        success = !!(payload && payload.pushManager);
+        if (success) this.state.swRegistration = payload;
         return new Promise((resolve) => {
-          resolve({ success: false });
+          resolve({ success });
+        });
+      case 'SUBSCRIBE_TO_PUSH_NOTIFCATIONS':
+        this.state.shouldPush = true;
+        if (this.state.swRegistration) {
+          return this.subscribeUserToPush();
+        }
+        return new Promise((r, rej) => {
+          rej({ success: false });
+        });
+      case 'UNSUBSCRIBE_FROM_PUSH_NOTIFICATIONS':
+        return this.unSubscribeUserToPush();
+      default:
+        return new Promise((r, rej) => {
+          rej({ success: false });
         });
     }
   }
@@ -148,24 +182,12 @@ class IrisAPI {
     });
   }
   sendRequest(url, type, bodyHeaders) {
-    // prefer to use websocket over https request
-    if (this.state.websocket !== null && this.state.websocket.readyState === 1) {
-      return this._sendWebSocketRequest(url, type, bodyHeaders);
-    }
     return httpRequest(url, type, bodyHeaders, this.state).then(
       (res) => {
         if (!res.success) throw validationError();
         return res;
       },
     );
-  }
-  _sendWebSocketRequest(url, type, bodyHeaders) {
-    // TODO: same method as _sendHttpRequest, but send over websocket
-    this.state.websocket.send(JSON.stringify({
-      url,
-      type,
-      bodyHeaders,
-    }));
   }
   getUserDetails() {
     // GET to /${utype} with "JWT ${token}" in Authorization header
@@ -181,33 +203,71 @@ class IrisAPI {
       () => null
     );
   }
-  getMessages() {
-    // GET to /${utype}/${uid}/images with "JWT ${token}" in Authorization header
-  }
-  getImages() {
-    if (this.state.user.utype === 'volunteer') {
-      // GET to /${utype}/${uid}s/images with "JWT ${token}" in Authorization header
+  // registerServiceWorker() {
+  //   if (!this.state.user) return false;
+  //   return registerServiceWorker(`${this.state.user.type}`)
+  //     .then(
+  //       (res) => { this.state.serviceWorker = res; },
+  //       (err) => { console.error(err); }
+  //     );
+  // }
+  updatePushSubscriptionOnServer(subscription) {
+    // Here's where you would send the subscription to the application server
+    if (subscription) {
+      const jsonSubscription = JSON.stringify(subscription);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${this.state.apiUrl}/push/subscribe`, true);
+      xhr.setRequestHeader('Content-type', 'application/json');
+      xhr.onload = function xhrOnload() {
+        // do something to response
+        console.log(this.responseText);
+      };
+      xhr.send(jsonSubscription);
     }
   }
-  websocketMessageHandler(message) {
-    console.log(message);
-  }
-  websocketCloseHandler(e) {
-    console.log(e);
-  }
-  startWebSocket(onMessageHandler, onCloseHandler) {
-    this.state.websocket = new WebSocket(`${this.state.apiUrl}${this.state.websocketUrl}`);
-    this.state.websocket.onmessage = onMessageHandler;
-    if (onCloseHandler) {
-      this.state.websocket.onclose = onCloseHandler;
+  subscribeUserToPush() {
+    const applicationServerKey = urlB64ToUint8Array('BDIkZeyEv0Xj2xXd0TlTFlDIkCxo50qhbPO0yYNl2BojkEGV-vDvq1vF4K4nrSop3tHdA4Z3-zSNi0gtIJoUMxU');
+    if (this.state.swRegistration) {
+      return this.state.swRegistration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey,
+      })
+        .then((subscription) => {
+          console.log('User is subscribed:', subscription);
+          this.updatePushSubscriptionOnServer(subscription);
+          return true;
+        })
+        .catch((err) => {
+          if (Notification.permission === 'denied') {
+            console.warn('Permission for notifications was denied');
+          } else {
+            console.error('Failed to subscribe the user: ', err);
+          }
+          return false;
+        });
     }
-    return true;
+    return new Promise((resolve) => {
+      resolve({ success: false });
+    });
   }
-  stopWebSocket() {
-    if (this.state.websocket !== null && this.state.websocket.readyState < 2) {
-      this.state.websocket.close();
-      this.state.websocket = null;
-    }
+
+  unSubscribeUserToPush() {
+    this.state.swRegistration.pushManager.getSubscription()
+      .then((subscription) => {
+        if (subscription) {
+          return subscription.unsubscribe();
+        }
+        return null;
+      })
+      .catch((error) => {
+        console.log('Error unsubscribing', error);
+        return false;
+      })
+      .then(() => {
+        this.updatePushSubscriptionOnServer(null);
+        console.log('User is unsubscribed');
+        return true;
+      });
   }
 }
 
