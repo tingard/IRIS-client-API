@@ -1,7 +1,6 @@
 /* eslint-disable class-methods-use-this, no-underscore-dangle */
 import jwtLib from 'jsonwebtoken';
 import httpRequest from './httpRequest';
-// import registerServiceWorker from './register-service-worker';
 
 // TODO: combine request calls to ease server load?
 // TODO: clever caching for instantaneous load
@@ -24,6 +23,10 @@ function urlB64ToUint8Array(base64String) {
   return outputArray;
 }
 
+const promiseGenerator = (s, m) => (
+  new Promise((r, rj) => (s ? r({ success: s, message: m }) : rj({ success: s, message: m })))
+);
+
 class IrisAPI {
   constructor() {
     // initialize storage
@@ -35,15 +38,11 @@ class IrisAPI {
     this.unSubscribeUserToPush = this.unSubscribeUserToPush.bind(this);
     this.updatePushSubscriptionOnServer = this.updatePushSubscriptionOnServer.bind(this);
     this.state = {
-      apiUrl: 'https://grapheel-iris-api.herokuapp.com',
-      // apiUrl: 'http://127.0.0.1:3000',
+      // apiUrl: 'https://grapheel-iris-api.herokuapp.com',
+      apiUrl: location.hostname === '127.0.0.1' ? 'http://127.0.0.1:3000' : 'https://grapheel-iris-api.herokuapp.com',
       token: null,
       isLoggedIn: false,
       user: {},
-      apiResponse: {
-        key: null,
-        data: {},
-      },
       swRegistration: null,
       shouldPush: false,
       isPushing: false,
@@ -75,7 +74,6 @@ class IrisAPI {
     });
   }
   loadTokenFromStorage() {
-    console.log('API Setting auth token from storage');
     this.state.token = localStorage.getItem('iris-token');
     Object.assign(this.state.user, {
       type: localStorage.getItem('iris-utype'),
@@ -114,9 +112,7 @@ class IrisAPI {
         })
       );
     }
-    return new Promise((resolve) => {
-      resolve({ success: false });
-    });
+    return promiseGenerator(false, 'Invalid user type');
   }
   handle(type, payload) {
     // TODO: sanitize payload here AND server
@@ -144,23 +140,17 @@ class IrisAPI {
       case 'REGISTER_SERVICE_WORKER':
         success = !!(payload && payload.pushManager);
         if (success) this.state.swRegistration = payload;
-        return new Promise((resolve) => {
-          resolve({ success });
-        });
+        return promiseGenerator(success);
       case 'SUBSCRIBE_TO_PUSH_NOTIFCATIONS':
         this.state.shouldPush = true;
         if (this.state.swRegistration) {
           return this.subscribeUserToPush();
         }
-        return new Promise((r, rej) => {
-          rej({ success: false });
-        });
+        return promiseGenerator(false, 'No service-worker linked to client API');
       case 'UNSUBSCRIBE_FROM_PUSH_NOTIFICATIONS':
         return this.unSubscribeUserToPush();
       default:
-        return new Promise((r, rej) => {
-          rej({ success: false });
-        });
+        return promiseGenerator(false, 'Invalid action');
     }
   }
   uploadImageRequest(formData) {
@@ -203,25 +193,16 @@ class IrisAPI {
       () => null
     );
   }
-  // registerServiceWorker() {
-  //   if (!this.state.user) return false;
-  //   return registerServiceWorker(`${this.state.user.type}`)
-  //     .then(
-  //       (res) => { this.state.serviceWorker = res; },
-  //       (err) => { console.error(err); }
-  //     );
-  // }
   updatePushSubscriptionOnServer(subscription) {
     // Here's where you would send the subscription to the application server
     if (subscription) {
       const jsonSubscription = JSON.stringify(subscription);
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', `${this.state.apiUrl}/push/subscribe`, true);
+      xhr.open('POST', `${this.state.apiUrl}/${this.state.user.type}s/subscribe`, true);
+      if (this.state.token !== null) {
+        xhr.setRequestHeader('Authorization', `JWT ${this.state.token}`);
+      }
       xhr.setRequestHeader('Content-type', 'application/json');
-      xhr.onload = function xhrOnload() {
-        // do something to response
-        console.log(this.responseText);
-      };
       xhr.send(jsonSubscription);
     }
   }
@@ -229,11 +210,9 @@ class IrisAPI {
     const applicationServerKey = urlB64ToUint8Array('BDIkZeyEv0Xj2xXd0TlTFlDIkCxo50qhbPO0yYNl2BojkEGV-vDvq1vF4K4nrSop3tHdA4Z3-zSNi0gtIJoUMxU');
     if (this.state.swRegistration) {
       return this.state.swRegistration.pushManager.subscribe({
-        userVisibleOnly: true,
         applicationServerKey,
       })
         .then((subscription) => {
-          console.log('User is subscribed:', subscription);
           this.updatePushSubscriptionOnServer(subscription);
           return true;
         })
@@ -246,11 +225,8 @@ class IrisAPI {
           return false;
         });
     }
-    return new Promise((resolve) => {
-      resolve({ success: false });
-    });
+    return promiseGenerator(false);
   }
-
   unSubscribeUserToPush() {
     this.state.swRegistration.pushManager.getSubscription()
       .then((subscription) => {
@@ -265,7 +241,6 @@ class IrisAPI {
       })
       .then(() => {
         this.updatePushSubscriptionOnServer(null);
-        console.log('User is unsubscribed');
         return true;
       });
   }
