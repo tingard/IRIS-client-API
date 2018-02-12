@@ -149,6 +149,11 @@ class IrisAPI {
         return promiseGenerator(false, 'No service-worker linked to client API');
       case 'UNSUBSCRIBE_FROM_PUSH_NOTIFICATIONS':
         return this.unSubscribeUserToPush();
+      case 'LOGOUT':
+        // TODO: send analytics to server
+        localStorage.removeItem('iris-token');
+        localStorage.removeItem('iris-utype');
+        return new Promise(res => res());
       default:
         return promiseGenerator(false, 'Invalid action');
     }
