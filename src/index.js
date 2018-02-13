@@ -216,6 +216,7 @@ class IrisAPI {
     if (this.state.swRegistration) {
       return this.state.swRegistration.pushManager.subscribe({
         applicationServerKey,
+        userVisibleOnly: true,
       })
         .then((subscription) => {
           this.updatePushSubscriptionOnServer(subscription);
