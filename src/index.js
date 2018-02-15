@@ -119,17 +119,17 @@ class IrisAPI {
     let success = false;
     switch (type.name) {
       case 'GET_USER_DETAILS':
-        return this.getUserDetails().then(r => Object.assign(payload, r));
+        return this.getUserDetails();
       case 'SET_USER_DETAILS':
         return this.sendRequest(`/${this.state.user.type}s`, 'PUT', payload);
       case 'GET_IMAGES':
-        return this.sendRequest('/images', 'GET').then(r => Object.assign(payload, r));
+        return this.sendRequest('/images', 'GET');
       case 'UPLOAD_IMAGE':
         return this.uploadImageRequest(payload);
       case 'EDIT_IMAGE':
         return this.sendRequest('/images', 'PUT', payload);
       case 'GET_MESSAGES':
-        return this.sendRequest('/messages', 'GET').then(r => Object.assign(payload, r));
+        return this.sendRequest('/messages', 'GET');
       case 'SEND_MESSAGE':
         if (payload.imageId) {
           return this.sendRequest('/messages', 'POST', payload);
