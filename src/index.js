@@ -103,6 +103,16 @@ class IrisAPI {
       () => ({ success: false }),
     );
   }
+  requestPasswordReset({ utype, email }) {
+    return this.sendRequest('/login/forgotten', 'POST', { utype, email });
+  }
+  setNewPassword({ utype, email, pwd, resetLink }) {
+    return this.sendRequest(
+      `/login/forgotten/${resetLink}`,
+      'POST',
+      { utype, email, pwd }
+    );
+  }
   registerUser(payload) {
     if (['volunteer', 'student'].includes(payload.utype)) {
       return this.sendRequest(`/${payload.utype}s`, 'POST', payload).then(
