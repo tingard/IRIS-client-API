@@ -96,7 +96,7 @@ class IrisAPI {
           this.state.isLoggedIn = true;
         } else {
           // inform of failed login
-          console.log('failed login');
+          console.log('[IRIS] failed login');
         }
         return response;
       },
@@ -137,7 +137,7 @@ class IrisAPI {
       case 'UPLOAD_IMAGE':
         return this.uploadImageRequest(payload);
       case 'EDIT_IMAGE':
-        return this.sendRequest('/images', 'PUT', payload);
+        return this.sendRequest(`/images/${payload.imageId}`, 'PUT', payload);
       case 'GET_MESSAGES':
         return this.sendRequest('/messages', 'GET');
       case 'SEND_MESSAGE':
@@ -234,9 +234,9 @@ class IrisAPI {
         })
         .catch((err) => {
           if (Notification.permission === 'denied') {
-            console.warn('Permission for notifications was denied');
+            console.warn('[IRIS] Permission for notifications was denied');
           } else {
-            console.error('Failed to subscribe the user: ', err);
+            console.error('[IRIS] Failed to subscribe the user: ', err);
           }
           return false;
         });
@@ -252,7 +252,7 @@ class IrisAPI {
         return null;
       })
       .catch((error) => {
-        console.log('Error unsubscribing', error);
+        console.log('[IRIS] Error unsubscribing', error);
         return false;
       })
       .then(() => {
