@@ -159,6 +159,8 @@ class IrisAPI {
         return promiseGenerator(false, 'No service-worker linked to client API');
       case 'UNSUBSCRIBE_FROM_PUSH_NOTIFICATIONS':
         return this.unSubscribeUserToPush();
+      case 'CONFIRM_EMAIL':
+        return this.sendRequest(`/${this.state.user.type}s/confirm/${payload}`, 'GET', {});
       case 'LOGOUT':
         // TODO: send analytics to server
         localStorage.removeItem('iris-token');
