@@ -2,30 +2,7 @@
 import jwtLib from 'jsonwebtoken';
 import httpRequest from './httpRequest';
 
-// TODO: combine request calls to ease server load?
-// TODO: clever caching for instantaneous load
-
-const validationError = () => ({ name: 'Validation Error', message: 'Not successful API call' });
-
-function urlB64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding)
-    .replace(/-/g, '+')
-    .replace(/_/g, '/');
-
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  /* eslint-disable no-plusplus */
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  /* eslint-enable no-plusplus */
-  return outputArray;
-}
-
-const promiseGenerator = (s, m) => (
-  new Promise((r, rj) => (s ? r({ success: s, message: m }) : rj({ success: s, message: m })))
-);
+import { validationError, urlB64ToUint8Array, promiseGenerator } from './helperFunctions';
 
 class IrisAPI {
   constructor() {
@@ -61,6 +38,8 @@ class IrisAPI {
       const utype = localStorage.getItem('iris-utype');
       if (token !== null) {
         const jwt = jwtLib.decode(token);
+        this.sendRequest(`/login/verify/${utype}`, 'GET')
+          .catch(e => console.error(e));
         // we might have a token, check by requesting a re-issue
         // TODO: make this call, and return the associated user details?
         this.state.token = token;
@@ -138,6 +117,9 @@ class IrisAPI {
         return this.uploadImageRequest(payload);
       case 'EDIT_IMAGE':
         return this.sendRequest(`/images/${payload.imageId}`, 'PUT', payload);
+      case 'REPLY_IMAGE':
+        console.log(payload);
+        return this.sendRequest('/messages', 'POST', payload);
       case 'GET_MESSAGES':
         return this.sendRequest('/messages', 'GET');
       case 'SEND_MESSAGE':
@@ -147,6 +129,8 @@ class IrisAPI {
           return this.sendRequest(`/messages/${payload.messageId}`, 'POST', payload);
         }
         return this.sendRequest('/messages', 'POST', payload);
+      case 'ACCEPT_MESSAGE':
+        return this.sendRequest(`/messages/${payload.messageId}`, 'PUT', payload);
       case 'REGISTER_SERVICE_WORKER':
         success = !!(payload && payload.pushManager);
         if (success) this.state.swRegistration = payload;
@@ -167,7 +151,7 @@ class IrisAPI {
         localStorage.removeItem('iris-utype');
         return new Promise(res => res());
       default:
-        return promiseGenerator(false, 'Invalid action');
+        return promiseGenerator(false, 'INVALID_ACTION');
     }
   }
   uploadImageRequest(formData) {
