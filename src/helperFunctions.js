@@ -17,5 +17,5 @@ export function urlB64ToUint8Array(base64String) {
 }
 
 export const promiseGenerator = (success, status) => (
-  new Promise((r, rj) => (success ? r({ success, status }) : rj({ success, status })))
+  success ? Promise.resolve({ success, status }) : Promise.reject({ success, status })
 );

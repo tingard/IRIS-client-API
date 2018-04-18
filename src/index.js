@@ -7,8 +7,6 @@ import { validationError, urlB64ToUint8Array, promiseGenerator } from './helperF
 class IrisAPI {
   constructor() {
     // initialize storage
-    // check API is online
-    // TODO: get existing token from storage and check if it's expired
     this.init = this.init.bind(this);
     this.sendRequest = this.sendRequest.bind(this);
     this.subscribeUserToPush = this.subscribeUserToPush.bind(this);
@@ -25,21 +23,20 @@ class IrisAPI {
       isPushing: false,
     };
   }
+  loadTokenFromStorage() {
+    const token = localStorage.getItem('iris-token');
+    const utype = localStorage.getItem('iris-utype');
+    this.state.token = token;
+    Object.assign(this.state.user, { type: utype });
+  }
   init() {
     return new Promise((resolve, reject) => {
-      this.sendRequest('', 'GET', []).then(
-        () => null,
-        (error) => {
-          // the api is not responsive, TODO: how to deal with this?
-          reject(error);
-        },
-      );
       const token = localStorage.getItem('iris-token');
       const utype = localStorage.getItem('iris-utype');
       if (token !== null) {
         const jwt = jwtLib.decode(token);
         this.sendRequest(`/login/verify/${utype}`, 'GET')
-          .catch(e => console.error(e));
+          .catch(e => console.warn(e));
         // we might have a token, check by requesting a re-issue
         // TODO: make this call, and return the associated user details?
         this.state.token = token;
@@ -49,15 +46,15 @@ class IrisAPI {
         this.state.isLoggedIn = true;
         (() => null)(jwt);
       }
+      this.sendRequest('', 'GET', []).then(
+        () => null,
+        (error) => {
+          // the api is not responsive, TODO: how to deal with this?
+          reject(error);
+        },
+      );
       resolve(this.state);
     });
-  }
-  loadTokenFromStorage() {
-    this.state.token = localStorage.getItem('iris-token');
-    Object.assign(this.state.user, {
-      type: localStorage.getItem('iris-utype'),
-    });
-    this.state.isLoggedIn = true;
   }
   login(utype, email, pwd) {
     // POST to /login with email, pwd, utypt in body headers x-www-form-urlencoded
@@ -82,6 +79,56 @@ class IrisAPI {
       () => ({ success: false }),
     );
   }
+  handle(type, payload) {
+    // TODO: sanitize payload here AND server
+    let success = false;
+    switch (type.name) {
+      case 'GET_USER_DETAILS':
+        return this.getUserDetails();
+      case 'SET_USER_DETAILS':
+        return this.sendRequest(`/${this.state.user.type}s`, 'PUT', payload);
+      case 'GET_IMAGES':
+        return this.sendRequest('/images', 'GET');
+      case 'UPLOAD_IMAGE':
+        return this.uploadImageRequest(payload);
+      case 'EDIT_IMAGE':
+        return this.sendRequest(`/images/${payload.imageId}`, 'PUT', payload);
+      case 'REPLY_IMAGE':
+        return this.sendRequest('/messages', 'POST', payload);
+      case 'GET_MESSAGES':
+        return this.sendRequest('/messages', 'GET');
+      case 'SEND_MESSAGE':
+        if (payload.imageId) {
+          return this.sendRequest('/messages', 'POST', payload);
+        } else if (payload.messageId) {
+          return this.sendRequest(`/messages/${payload.messageId}`, 'POST', payload);
+        }
+        return this.sendRequest('/messages', 'POST', payload);
+      case 'ACCEPT_MESSAGE':
+        return this.sendRequest(`/messages/${payload.messageId}/complete`, 'PUT', payload);
+      case 'REGISTER_SERVICE_WORKER':
+        success = !!(payload && payload.pushManager);
+        if (success) this.state.swRegistration = payload;
+        return promiseGenerator(success);
+      case 'SUBSCRIBE_TO_PUSH_NOTIFCATIONS':
+        this.state.shouldPush = true;
+        if (this.state.swRegistration) {
+          return this.subscribeUserToPush();
+        }
+        return promiseGenerator(false, 'No service-worker linked to client API');
+      case 'UNSUBSCRIBE_FROM_PUSH_NOTIFICATIONS':
+        return this.unSubscribeUserToPush();
+      case 'CONFIRM_EMAIL':
+        return this.sendRequest(`/confirm/${payload}`, 'GET', {});
+      case 'LOGOUT':
+        // TODO: send analytics to server
+        localStorage.removeItem('iris-token');
+        localStorage.removeItem('iris-utype');
+        return Promise.resolve();
+      default:
+        return promiseGenerator(false, 'INVALID_ACTION');
+    }
+  }
   requestPasswordReset({ utype, email }) {
     return this.sendRequest('/login/forgotten', 'POST', { utype, email });
   }
@@ -102,57 +149,6 @@ class IrisAPI {
       );
     }
     return promiseGenerator(false, 'Invalid user type');
-  }
-  handle(type, payload) {
-    // TODO: sanitize payload here AND server
-    let success = false;
-    switch (type.name) {
-      case 'GET_USER_DETAILS':
-        return this.getUserDetails();
-      case 'SET_USER_DETAILS':
-        return this.sendRequest(`/${this.state.user.type}s`, 'PUT', payload);
-      case 'GET_IMAGES':
-        return this.sendRequest('/images', 'GET');
-      case 'UPLOAD_IMAGE':
-        return this.uploadImageRequest(payload);
-      case 'EDIT_IMAGE':
-        return this.sendRequest(`/images/${payload.imageId}`, 'PUT', payload);
-      case 'REPLY_IMAGE':
-        console.log(payload);
-        return this.sendRequest('/messages', 'POST', payload);
-      case 'GET_MESSAGES':
-        return this.sendRequest('/messages', 'GET');
-      case 'SEND_MESSAGE':
-        if (payload.imageId) {
-          return this.sendRequest('/messages', 'POST', payload);
-        } else if (payload.messageId) {
-          return this.sendRequest(`/messages/${payload.messageId}`, 'POST', payload);
-        }
-        return this.sendRequest('/messages', 'POST', payload);
-      case 'ACCEPT_MESSAGE':
-        return this.sendRequest(`/messages/${payload.messageId}`, 'PUT', payload);
-      case 'REGISTER_SERVICE_WORKER':
-        success = !!(payload && payload.pushManager);
-        if (success) this.state.swRegistration = payload;
-        return promiseGenerator(success);
-      case 'SUBSCRIBE_TO_PUSH_NOTIFCATIONS':
-        this.state.shouldPush = true;
-        if (this.state.swRegistration) {
-          return this.subscribeUserToPush();
-        }
-        return promiseGenerator(false, 'No service-worker linked to client API');
-      case 'UNSUBSCRIBE_FROM_PUSH_NOTIFICATIONS':
-        return this.unSubscribeUserToPush();
-      case 'CONFIRM_EMAIL':
-        return this.sendRequest(`/confirm/${payload}`, 'GET', {});
-      case 'LOGOUT':
-        // TODO: send analytics to server
-        localStorage.removeItem('iris-token');
-        localStorage.removeItem('iris-utype');
-        return new Promise(res => res());
-      default:
-        return promiseGenerator(false, 'INVALID_ACTION');
-    }
   }
   uploadImageRequest(formData) {
     // TODO: mock for testing
