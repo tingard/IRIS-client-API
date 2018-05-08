@@ -106,6 +106,8 @@ class IrisAPI {
         return this.sendRequest('/messages', 'POST', payload);
       case 'ACCEPT_MESSAGE':
         return this.sendRequest(`/messages/${payload.messageId}/complete`, 'PUT', payload);
+      case 'GET_LICENCES':
+        return this.sendRequest('/licences', 'GET');
       case 'REGISTER_SERVICE_WORKER':
         success = !!(payload && payload.pushManager);
         if (success) this.state.swRegistration = payload;
