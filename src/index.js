@@ -15,9 +15,11 @@ class IrisAPI {
     this.state = {
       // apiUrl: 'https://grapheel-iris-api.herokuapp.com',
       apiUrl: location.hostname === '127.0.0.1' ? 'http://127.0.0.1:3000' : 'https://grapheel-iris-api.herokuapp.com',
-      token: null,
+      token: localStorage.getItem('iris-token') || null,
       isLoggedIn: false,
-      user: {},
+      user: {
+        type: localStorage.getItem('iris-utype') || null,
+      },
       swRegistration: null,
       shouldPush: false,
       isPushing: false,
@@ -108,6 +110,10 @@ class IrisAPI {
         return this.sendRequest(`/messages/${payload.messageId}/complete`, 'PUT', payload);
       case 'GET_LICENCES':
         return this.sendRequest('/licences', 'GET');
+      case 'PURCHASE_LICENCE':
+        return this.sendRequest('/licences/purchase', 'POST');
+      case 'LINK_LICENCE':
+        return this.sendRequest('/students', 'PUT', { details: { licences: payload.licenceId } });
       case 'REGISTER_SERVICE_WORKER':
         success = !!(payload && payload.pushManager);
         if (success) this.state.swRegistration = payload;
