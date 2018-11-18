@@ -81,16 +81,38 @@ class IrisAPI {
       () => ({ success: false }),
     );
   }
+  logout() {
+    localStorage.removeItem('iris-token');
+    localStorage.removeItem('iris-utype');
+  }
   handle(type, payload) {
     // TODO: sanitize payload here AND server
     let success = false;
     switch (type.name) {
       case 'GET_USER_DETAILS':
-        return this.getUserDetails();
+        return this.getUserDetails()
+          .catch(
+            (err) => {
+              console.log('err', err.status === 401);
+              if (err.status === 401) {
+                this.logout();
+                location.reload();
+              }
+            }
+          );
       case 'SET_USER_DETAILS':
         return this.sendRequest(`/${this.state.user.type}s`, 'PUT', payload);
       case 'GET_IMAGES':
-        return this.sendRequest('/images', 'GET');
+        return this.sendRequest('/images', 'GET')
+          .catch(
+            (err) => {
+              console.log('err', err.status === 401);
+              if (err.status === 401) {
+                this.logout();
+                location.reload();
+              }
+            }
+          );
       case 'UPLOAD_IMAGE':
         return this.uploadImageRequest(payload);
       case 'EDIT_IMAGE':
@@ -98,7 +120,16 @@ class IrisAPI {
       case 'REPLY_IMAGE':
         return this.sendRequest('/messages', 'POST', payload);
       case 'GET_MESSAGES':
-        return this.sendRequest('/messages', 'GET');
+        return this.sendRequest('/messages', 'GET')
+          .catch(
+            (err) => {
+              console.log('err', err.status === 401);
+              if (err.status === 401) {
+                this.logout();
+                location.reload();
+              }
+            }
+          );
       case 'SEND_MESSAGE':
         if (payload.imageId) {
           return this.sendRequest('/messages', 'POST', payload);
@@ -130,8 +161,7 @@ class IrisAPI {
         return this.sendRequest(`/confirm/${payload}`, 'GET', {});
       case 'LOGOUT':
         // TODO: send analytics to server
-        localStorage.removeItem('iris-token');
-        localStorage.removeItem('iris-utype');
+        this.logout();
         return Promise.resolve();
       default:
         return promiseGenerator(false, 'INVALID_ACTION');
@@ -177,12 +207,14 @@ class IrisAPI {
     });
   }
   sendRequest(url, type, bodyHeaders) {
-    return httpRequest(url, type, bodyHeaders, this.state).then(
-      (res) => {
-        if (!res.success) throw validationError();
-        return res;
-      },
-    );
+    return httpRequest(url, type, bodyHeaders, this.state)
+      .then(
+        (res) => {
+          console.log('resres', res);
+          if (!res.success) throw validationError();
+          return res;
+        },
+      );
   }
   getUserDetails() {
     // GET to /${utype} with "JWT ${token}" in Authorization header

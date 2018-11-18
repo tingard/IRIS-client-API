@@ -6,12 +6,9 @@ import babel from 'gulp-babel';
 
 // define where our paths are
 const paths = {
-  allSrcJs: 'src/**/*.js?(x)', // all js(x) files
+  allSrcJs: 'src/**/*.js', // all js(x) files
   entryPoint: './src/index.js',
-  testJs: '**/*.spec.js?(x)', // server js(x) files
-  serverEntryPoint: 'src/index.js', // client connection file
   gulpFile: 'gulpfile.babel.js', // gulp configuration file
-  libDir: './lib',
   distDir: './dist',
 };
 

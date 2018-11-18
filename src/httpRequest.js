@@ -17,7 +17,7 @@ export default (url, type, bodyHeaders, state) => (
           resolve(responseObject);
         }
       } else {
-        reject(Error(`API call to ${url} failed`));
+        reject(xhr);
       }
     };
     xhr.onerror = () => {
