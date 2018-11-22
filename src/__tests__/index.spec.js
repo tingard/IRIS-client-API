@@ -1,20 +1,20 @@
 /* eslint prefer-arrow-callback: 0, func-names: 0, 'react/jsx-boolean-value': ['error', 'always'],
-'react/jsx-filename-extension': 0, no-unused-vars: 0, no-underscore-dangle: 0 */
+'react/jsx-filename-extension': 0, no-unused-vars: 0, no-underscore-dangle: 0, new-cap: 0 */
 
 import assert from 'assert';
 import jwt from 'jsonwebtoken';
 
 jest.mock('../httpRequest');
 
-const ApiClient = require('../index.js');
+const IrisAPI = require('../index.js').default;
 
 describe('initial configuration without a local token', () => {
-  const cli = new ApiClient();
+  const cli = new IrisAPI();
   it('should have a blank token', () => {
     expect(cli.state.token).toBe(null);
   });
   it('should have a blank user', () => {
-    expect(cli.state.user).toEqual({});
+    expect(cli.state.user).toEqual({ type: null });
   });
 });
 
@@ -24,7 +24,7 @@ describe('initial configuration with a local token', () => {
   localStorage.setItem('iris-token', token);
   localStorage.setItem('iris-utype', type);
   describe('using `.init()`', () => {
-    const cli = new ApiClient();
+    const cli = new IrisAPI();
     it(
       'should have token from storage',
       () => cli.init().then(() => {
@@ -38,7 +38,7 @@ describe('initial configuration with a local token', () => {
     });
   });
   describe('using `.loadTokenFromStorage()`', () => {
-    const cli = new ApiClient();
+    const cli = new IrisAPI();
     cli.loadTokenFromStorage();
     it('should have token from storage', () => {
       expect.assertions(1);

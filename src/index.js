@@ -1,7 +1,6 @@
 /* eslint-disable class-methods-use-this, no-underscore-dangle */
-import jwtLib from 'jsonwebtoken';
+import decode from 'jsonwebtoken/decode';
 import httpRequest from './httpRequest';
-
 import { validationError, urlB64ToUint8Array, promiseGenerator } from './helperFunctions';
 
 class IrisAPI {
@@ -25,18 +24,20 @@ class IrisAPI {
       isPushing: false,
     };
   }
+
   loadTokenFromStorage() {
     const token = localStorage.getItem('iris-token');
     const utype = localStorage.getItem('iris-utype');
     this.state.token = token;
     Object.assign(this.state.user, { type: utype });
   }
+
   init() {
     return new Promise((resolve, reject) => {
       const token = localStorage.getItem('iris-token');
       const utype = localStorage.getItem('iris-utype');
       if (token !== null) {
-        const jwt = jwtLib.decode(token);
+        const jwt = decode(token);
         this.sendRequest(`/login/verify/${utype}`, 'GET')
           .catch(e => console.warn(e));
         // we might have a token, check by requesting a re-issue
@@ -58,6 +59,7 @@ class IrisAPI {
       resolve(this.state);
     });
   }
+
   login(utype, email, pwd) {
     // POST to /login with email, pwd, utypt in body headers x-www-form-urlencoded
     return this.sendRequest(
@@ -81,10 +83,12 @@ class IrisAPI {
       () => ({ success: false }),
     );
   }
+
   logout() {
     localStorage.removeItem('iris-token');
     localStorage.removeItem('iris-utype');
   }
+
   handle(type, payload) {
     // TODO: sanitize payload here AND server
     let success = false;
@@ -133,7 +137,8 @@ class IrisAPI {
       case 'SEND_MESSAGE':
         if (payload.imageId) {
           return this.sendRequest('/messages', 'POST', payload);
-        } else if (payload.messageId) {
+        }
+        if (payload.messageId) {
           return this.sendRequest(`/messages/${payload.messageId}`, 'POST', payload);
         }
         return this.sendRequest('/messages', 'POST', payload);
@@ -167,9 +172,11 @@ class IrisAPI {
         return promiseGenerator(false, 'INVALID_ACTION');
     }
   }
+
   requestPasswordReset({ utype, email }) {
     return this.sendRequest('/login/forgotten', 'POST', { utype, email });
   }
+
   setNewPassword({ utype, email, pwd, resetLink }) {
     return this.sendRequest(
       `/login/forgotten/${resetLink}`,
@@ -177,6 +184,7 @@ class IrisAPI {
       { utype, email, pwd }
     );
   }
+
   registerUser(payload) {
     if (['volunteer', 'student'].includes(payload.utype)) {
       return this.sendRequest(`/${payload.utype}s`, 'POST', payload).then(
@@ -188,6 +196,7 @@ class IrisAPI {
     }
     return promiseGenerator(false, 'Invalid user type');
   }
+
   uploadImageRequest(formData) {
     // TODO: mock for testing
     return new Promise((resolve, reject) => {
@@ -206,6 +215,7 @@ class IrisAPI {
       request.send(formData);
     });
   }
+
   sendRequest(url, type, bodyHeaders) {
     return httpRequest(url, type, bodyHeaders, this.state)
       .then(
@@ -216,6 +226,7 @@ class IrisAPI {
         },
       );
   }
+
   getUserDetails() {
     // GET to /${utype} with "JWT ${token}" in Authorization header
     return this.sendRequest(
@@ -230,6 +241,7 @@ class IrisAPI {
       () => null
     );
   }
+
   updatePushSubscriptionOnServer(subscription) {
     // Here's where you would send the subscription to the application server
     if (subscription) {
@@ -243,6 +255,7 @@ class IrisAPI {
       xhr.send(jsonSubscription);
     }
   }
+
   subscribeUserToPush() {
     const applicationServerKey = urlB64ToUint8Array('BDIkZeyEv0Xj2xXd0TlTFlDIkCxo50qhbPO0yYNl2BojkEGV-vDvq1vF4K4nrSop3tHdA4Z3-zSNi0gtIJoUMxU');
     if (this.state.swRegistration) {
@@ -265,6 +278,7 @@ class IrisAPI {
     }
     return promiseGenerator(false);
   }
+
   unSubscribeUserToPush() {
     this.state.swRegistration.pushManager.getSubscription()
       .then((subscription) => {

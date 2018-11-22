@@ -25,10 +25,10 @@ gulp.task('lint', () =>
 
 gulp.task('build', () => (
   gulp.src(paths.entryPoint)
-      .pipe(babel({
-        presets: ['babel-preset-es2015'],
-      }))
-      .pipe(gulp.dest(paths.distDir))
+    .pipe(babel({
+      presets: ['babel-preset-es2015'],
+    }))
+    .pipe(gulp.dest(paths.distDir))
 ));
 
 gulp.task(
