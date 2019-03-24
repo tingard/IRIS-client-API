@@ -1,7 +1,7 @@
 /* eslint-disable class-methods-use-this, no-underscore-dangle */
-import decode from 'jsonwebtoken/decode';
 import httpRequest from './httpRequest';
 import { validationError, urlB64ToUint8Array, promiseGenerator } from './helperFunctions';
+
 
 class IrisAPI {
   constructor() {
@@ -37,17 +37,15 @@ class IrisAPI {
       const token = localStorage.getItem('iris-token');
       const utype = localStorage.getItem('iris-utype');
       if (token !== null) {
-        const jwt = decode(token);
-        this.sendRequest(`/login/verify/${utype}`, 'GET')
-          .catch(e => console.warn(e));
         // we might have a token, check by requesting a re-issue
         // TODO: make this call, and return the associated user details?
         this.state.token = token;
         this.state.user = {
           type: utype,
         };
+        this.sendRequest(`/login/verify/${utype}`, 'GET')
+          .catch(e => console.warn(e));
         this.state.isLoggedIn = true;
-        (() => null)(jwt);
       }
       this.sendRequest('', 'GET', []).then(
         () => null,
@@ -220,10 +218,15 @@ class IrisAPI {
     return httpRequest(url, type, bodyHeaders, this.state)
       .then(
         (res) => {
-          console.log('resres', res);
           if (!res.success) throw validationError();
           return res;
         },
+        (res) => {
+          if (res.status === 401) {
+            this.handle({ name: 'LOGOUT' });
+          }
+          return res;
+        }
       );
   }
 

@@ -4,10 +4,13 @@
   "description": "Script to talk to the Grapheel IRIS API",
   "main": "./dist/index.js",
   "scripts": {
-    "test": "jest src/",
-    "build": "webpack",
-    "build-gulp": "gulp build",
-    "watch": "gulp watch"
+    "test": "eslint src & jest src/",
+    "build": "babel src --out-dir dist"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "eslint src"
+    }
   },
   "repository": {
     "type": "git",
@@ -24,36 +27,22 @@
   },
   "homepage": "https://github.com/tingard/IRIS-client-API#readme",
   "devDependencies": {
-    "@babel/cli": "^7.1.5",
-    "@babel/core": "^7.1.6",
-    "@babel/preset-env": "^7.1.6",
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.4.0",
+    "@babel/preset-env": "^7.4.2",
     "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "^23.6.0",
     "babel-loader": "^8.0.4",
-    "eslint": "^5.9.0",
+    "eslint": "^5.15.3",
     "eslint-config-airbnb": "^17.1.0",
-    "eslint-plugin-import": "^2.2.0",
-    "gulp": "^3.9.1",
-    "gulp-babel": "^8.0.0",
-    "gulp-eslint": "^5.0.0",
-    "husky": "^1.1.4",
-    "jest": "^23.6.0",
-    "webpack": "^4.25.1",
-    "webpack-cli": "^3.1.2",
-    "webpackbar": "^3.1.3"
+    "eslint-plugin-import": "^2.16.0",
+    "husky": "^1.3.1",
+    "jest": "^23.6.0"
   },
   "dependencies": {
-    "eslint-plugin-jsx-a11y": "^6.1.2",
-    "eslint-plugin-react": "^7.11.1",
+    "eslint-plugin-jsx-a11y": "^6.2.1",
+    "eslint-plugin-react": "^7.12.4",
     "jsonwebtoken": "^8.0.0"
-  },
-  "resolutions": {
-    "babel-core": "7.0.0-bridge.0"
-  },
-  "babel": {
-    "presets": [
-      "@babel/preset-env"
-    ]
   },
   "jest": {
     "setupTestFrameworkScriptFile": "./__jestSetup__.js",
