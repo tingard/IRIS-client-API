@@ -17,7 +17,7 @@ export default (url, type, bodyHeaders, state) => (
           resolve(responseObject);
         }
       } else {
-        reject(xhr);
+        reject({ status: xhr.status });
       }
     };
     xhr.onerror = () => {
