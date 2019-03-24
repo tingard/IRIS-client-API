@@ -1,7 +1,7 @@
 /* eslint-disable class-methods-use-this, no-underscore-dangle */
-import decode from 'jsonwebtoken/decode';
 import httpRequest from './httpRequest';
 import { validationError, urlB64ToUint8Array, promiseGenerator } from './helperFunctions';
+
 
 class IrisAPI {
   constructor() {

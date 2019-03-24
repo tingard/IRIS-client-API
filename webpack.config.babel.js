@@ -5,11 +5,13 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'index.js',
+    library: 'irisClientAPI',
+    libraryExport: 'default',
   },
   entry: {
     main: './src/index.js',
   },
-  // mode: 'production',
+  mode: 'development',
   module: {
     rules: [
       {
