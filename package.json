@@ -4,8 +4,13 @@
   "description": "Script to talk to the Grapheel IRIS API",
   "main": "./dist/index.js",
   "scripts": {
-    "test": "jest src/",
-    "build": "webpack"
+    "test": "eslint src & jest src/",
+    "build": "babel src --out-dir dist"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "eslint src"
+    }
   },
   "repository": {
     "type": "git",
@@ -31,17 +36,10 @@
     "eslint": "^5.15.3",
     "eslint-config-airbnb": "^17.1.0",
     "eslint-plugin-import": "^2.16.0",
-    "gulp": "^3.9.1",
-    "gulp-babel": "^8.0.0",
-    "gulp-eslint": "^5.0.0",
     "husky": "^1.3.1",
-    "jest": "^23.6.0",
-    "webpack": "^4.29.6",
-    "webpack-cli": "^3.3.0",
-    "webpackbar": "^3.1.5"
+    "jest": "^23.6.0"
   },
   "dependencies": {
-    "babel": "^6.23.0",
     "eslint-plugin-jsx-a11y": "^6.2.1",
     "eslint-plugin-react": "^7.12.4",
     "jsonwebtoken": "^8.0.0"

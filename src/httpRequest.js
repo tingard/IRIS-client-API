@@ -12,12 +12,12 @@ export default (url, type, bodyHeaders, state) => (
       if (xhr.status === 200) {
         const responseObject = JSON.parse(xhr.response);
         if (responseObject.success === false) {
-          reject(responseObject);
+          reject(new Error(responseObject));
         } else {
           resolve(responseObject);
         }
       } else {
-        reject({ status: xhr.status });
+        reject(new Error({ status: xhr.status }));
       }
     };
     xhr.onerror = () => {
