@@ -85,6 +85,7 @@ class IrisAPI {
   logout() {
     localStorage.removeItem('iris-token');
     localStorage.removeItem('iris-utype');
+    document.location.assign('/');
   }
 
   handle(type, payload) {
@@ -190,13 +191,20 @@ class IrisAPI {
   sendRequest(url, type, bodyHeaders) {
     return httpRequest(url, type, bodyHeaders, this.state)
       .then(
-        (res) => {
-          if (res.status === 401) {
-            this.logout();
-            location.reload();
+        (xhr) => {
+          if (xhr.status === 200) {
+            const responseObject = JSON.parse(xhr.response);
+            if (!responseObject.success) {
+              throw validationError();
+            }
+            return responseObject;
           }
-          if (res.status === 200 && !res.success) throw validationError();
-          return res;
+          if (xhr.status === 401) {
+            console.log('logging out');
+            this.logout();
+            return null;
+          }
+          throw new Error('Bad server response');
         },
       );
   }
@@ -236,18 +244,13 @@ class IrisAPI {
         applicationServerKey,
         userVisibleOnly: true,
       })
-        .then((subscription) => {
-          this.updatePushSubscriptionOnServer(subscription);
-          return true;
-        })
-        .catch((err) => {
-          if (Notification.permission === 'denied') {
-            console.warn('[IRIS] Permission for notifications was denied');
-          } else {
-            console.error('[IRIS] Failed to subscribe the user: ', err);
-          }
-          return false;
-        });
+        .then(
+          (subscription) => {
+            this.updatePushSubscriptionOnServer(subscription);
+            return true;
+          },
+          () => false,
+        );
     }
     return promiseGenerator(false);
   }
