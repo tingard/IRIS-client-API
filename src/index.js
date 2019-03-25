@@ -11,9 +11,15 @@ class IrisAPI {
     this.subscribeUserToPush = this.subscribeUserToPush.bind(this);
     this.unSubscribeUserToPush = this.unSubscribeUserToPush.bind(this);
     this.updatePushSubscriptionOnServer = this.updatePushSubscriptionOnServer.bind(this);
+    let apiUrl;
+    if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
+      apiUrl = 'http://localhost:3000';
+    } else {
+      apiUrl = 'https://grapheel-iris-api.herokuapp.com';
+    }
     this.state = {
       // apiUrl: 'https://grapheel-iris-api.herokuapp.com',
-      apiUrl: location.hostname === '127.0.0.1' ? 'http://127.0.0.1:3000' : 'https://grapheel-iris-api.herokuapp.com',
+      apiUrl,
       token: localStorage.getItem('iris-token') || null,
       isLoggedIn: false,
       user: {
