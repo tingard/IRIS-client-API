@@ -92,29 +92,11 @@ class IrisAPI {
     let success = false;
     switch (type.name) {
       case 'GET_USER_DETAILS':
-        return this.getUserDetails()
-          .catch(
-            (err) => {
-              console.log('err', err.status === 401);
-              if (err.status === 401) {
-                this.logout();
-                location.reload();
-              }
-            }
-          );
+        return this.getUserDetails();
       case 'SET_USER_DETAILS':
         return this.sendRequest(`/${this.state.user.type}s`, 'PUT', payload);
       case 'GET_IMAGES':
-        return this.sendRequest('/images', 'GET')
-          .catch(
-            (err) => {
-              console.log('err', err.status === 401);
-              if (err.status === 401) {
-                this.logout();
-                location.reload();
-              }
-            }
-          );
+        return this.sendRequest('/images', 'GET');
       case 'UPLOAD_IMAGE':
         return this.uploadImageRequest(payload);
       case 'EDIT_IMAGE':
@@ -122,16 +104,7 @@ class IrisAPI {
       case 'REPLY_IMAGE':
         return this.sendRequest('/messages', 'POST', payload);
       case 'GET_MESSAGES':
-        return this.sendRequest('/messages', 'GET')
-          .catch(
-            (err) => {
-              console.log('err', err.status === 401);
-              if (err.status === 401) {
-                this.logout();
-                location.reload();
-              }
-            }
-          );
+        return this.sendRequest('/messages', 'GET');
       case 'SEND_MESSAGE':
         if (payload.imageId) {
           return this.sendRequest('/messages', 'POST', payload);
@@ -218,15 +191,13 @@ class IrisAPI {
     return httpRequest(url, type, bodyHeaders, this.state)
       .then(
         (res) => {
-          if (!res.success) throw validationError();
+          if (res.status === 401) {
+            this.logout();
+            location.reload();
+          }
+          if (res.status === 200 && !res.success) throw validationError();
           return res;
         },
-        (res) => {
-          if (res.status === 401) {
-            this.handle({ name: 'LOGOUT' });
-          }
-          return res;
-        }
       );
   }
 
@@ -240,8 +211,7 @@ class IrisAPI {
       (response) => {
         Object.assign(this.state.user, response);
         return this.state.user;
-      },
-      () => null
+      }
     );
   }
 

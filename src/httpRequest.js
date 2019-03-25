@@ -11,13 +11,9 @@ export default (url, type, bodyHeaders, state) => (
     xhr.onload = () => {
       if (xhr.status === 200) {
         const responseObject = JSON.parse(xhr.response);
-        if (responseObject.success === false) {
-          reject(new Error(responseObject));
-        } else {
-          resolve(responseObject);
-        }
+        resolve(responseObject);
       } else {
-        reject(new Error({ status: xhr.status }));
+        resolve(xhr);
       }
     };
     xhr.onerror = () => {

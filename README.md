@@ -10,6 +10,6 @@ The most important part of this is really the tests. Ideally every possible API 
 
 Please only contribute if you are a member of the IRIS dev team, though issue raising and suggestions are more than welcome!
 
-To run tests on code, simply use `yarn test`. Yes we use yarn and so should you (Turbo's cool too). npm is **sooo** 2015.
+To run tests on code, simply use `yarn test`.
 
 Over and out 🚀
