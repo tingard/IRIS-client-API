@@ -1,6 +1,6 @@
 {
   "name": "grapheel-iris-client-api",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "Script to talk to the Grapheel IRIS API",
   "main": "./dist/index.js",
   "scripts": {
